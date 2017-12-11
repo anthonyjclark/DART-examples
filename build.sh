@@ -1,13 +1,12 @@
 #!/usr/bin/env bash
 
-DYLIB_DIR="/Users/ajc/Documents/projects/adabot02/local/lib/"
+DYLIB_DIR="$HOME/.local/lib"
 
 COMPILER="clang++"
 CPP_FLAGS="-std=c++11 -Wall -Wextra"
 BIN_DIR="bin"
 
-INC_DIRS="-I/usr/local/include/eigen3\
-          -I/Users/ajc/Documents/projects/adabot02/local/include"
+INC_DIRS="-I/usr/local/include/eigen3 -I$HOME/.local/include"
 LIB_DIRS="-L$DYLIB_DIR"
 LIBS="-ldart -lassimp"
 
@@ -24,7 +23,6 @@ function compile () {
 
 function build () {
     if [ -d "$1" ]; then
-        printf "*** Building ***\n"
         compile "$1"
     else
         printf "Error: could not find \"""$1""\"\n"
@@ -33,7 +31,6 @@ function build () {
 
 function run () {
     if [ -f "$BIN_DIR"/"$1" ]; then
-        printf "*** Running ***\n"
         "$BIN_DIR"/"$1"
     else
         printf "Error: could not find \"""$BIN_DIR"/"$1""\"\n"
@@ -57,8 +54,11 @@ case "$1" in
         run ${2%/}
         ;;
     brun )
+        printf "*** Building ***\n"
         build ${2%/}
+
         if [ $? -eq 0 ]; then
+            printf "*** Running ***\n"
             run ${2%/}
         fi
         ;;
