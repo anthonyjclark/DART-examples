@@ -1,5 +1,6 @@
 
 #include <dart/dart.hpp>
+#include "../revisit-logger/cpp/logger.hpp"
 #include <iostream>
 
 int main()
@@ -7,7 +8,7 @@ int main()
     constexpr double density = 1.0;
     constexpr double radius = 0.3;
     constexpr double restitution = 0.9;
-    constexpr double damping = 0.1;
+    constexpr double damping = 0.0;
     constexpr double starting_height = 10.0;
     const std::string name{"sphere1"};
 
@@ -127,20 +128,32 @@ int main()
 
     constexpr double TIME_STOP = 10;
     constexpr double TIME_STEP = 0.001;
-    constexpr double OUTPUT_STEP = 0.05;
+    constexpr double VIS_STEP = 1.0 / 100.0;
+    constexpr double VIS_SCALE = 100;
     world->setTimeStep(TIME_STEP);
 
-    std::cout << "Time \"Height (R=" << restitution << "\")\n";
-    std::cout << world->getTime() << " " << sphere->getPosition(5) << std::endl;
-    auto next_output_time = OUTPUT_STEP;
+    // The logger uses a vertical y-axis (and cannot be changed, for now)
+    revisit::logger rl(0.0, VIS_STEP, TIME_STOP);
+    rl.add_group(name, "sphere", radius * 2 * VIS_SCALE);
+    rl.add_frame(name, 0, starting_height * VIS_SCALE, 0, 0, 0, 0, 1);
+
+    double next_vis_output_time = VIS_STEP;
     while (world->getTime() < TIME_STOP + TIME_STEP/2.0) {
         world->step();
 
-        if (world->getTime() > next_output_time) {
-            std::cout << world->getTime() << " " << sphere->getPosition(5) << std::endl;
-            next_output_time += OUTPUT_STEP;
+        if (world->getTime() > next_vis_output_time) {
+
+            // Ignore rotations and lateral movements
+            rl.add_frame(name,
+                0.0, sphere->getPosition(5) * VIS_SCALE, 0.0,
+                0.0, 0.0, 0.0, 1.0);
+
+            next_vis_output_time += VIS_STEP;
         }
+
     }
+
+    std::cout << rl.to_string() << std::endl;
 
     return EXIT_SUCCESS;
 }

@@ -3,7 +3,7 @@
 DYLIB_DIR="$HOME/.local/lib"
 
 COMPILER="clang++"
-CPP_FLAGS="-std=c++11 -Wall -Wextra"
+CPP_FLAGS="-std=c++14 -Wall -Wextra"
 BIN_DIR="bin"
 
 INC_DIRS="-I/usr/local/include/eigen3 -I$HOME/.local/include"

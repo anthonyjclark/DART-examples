@@ -24,6 +24,13 @@ Use the following to add the `logger` submodule:
 hub submodule update --init
 ```
 
+To update the submodule, use:
+
+```bash
+cd revisit-logger
+git pull
+```
+
 # Explanations
 
 - [Sphere](https://medium.com/@anthonyjclark/starting-with-dart-dynamic-animation-and-robotics-toolkit-149cbe677c1)
