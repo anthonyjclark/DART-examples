@@ -6,7 +6,8 @@ COMPILER="clang++"
 CPP_FLAGS="-std=c++14 -Wall -Wextra"
 BIN_DIR="bin"
 
-INC_DIRS="-I/usr/local/include/eigen3 -I$HOME/.local/include"
+# Using isystem to suppress DART warnings
+INC_DIRS="-I/usr/local/include/eigen3 -isystem$HOME/.local/include"
 LIB_DIRS="-L$DYLIB_DIR"
 LIBS="-ldart -lassimp"
 
