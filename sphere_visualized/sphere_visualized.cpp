@@ -129,7 +129,7 @@ int main()
     constexpr double TIME_STOP = 10;
     constexpr double TIME_STEP = 0.001;
     constexpr double VIS_STEP = 1.0 / 100.0;
-    constexpr double VIS_SCALE = 100;
+    constexpr double VIS_SCALE = 50;
     world->setTimeStep(TIME_STEP);
 
     // The logger uses a vertical y-axis (and cannot be changed, for now)
@@ -153,7 +153,8 @@ int main()
 
     }
 
-    std::cout << rl.to_string() << std::endl;
+    // Passing false prints a compact JSON representation
+    std::cout << rl.to_string(false) << std::endl;
 
     return EXIT_SUCCESS;
 }
