@@ -4,6 +4,7 @@
 #include <dart/dart.hpp>
 using namespace dart::dynamics;
 using namespace dart::simulation;
+using namespace dart::collision;
 using namespace Eigen;
 
 #include <dart/gui/gui.hpp>
@@ -42,6 +43,15 @@ public:
             default:
                 SimWindow::keyboard(key, x, y);
         }
+    }
+
+    void drawWorld() const override
+    {
+        // Make sure lighting is turned on and that polygons get filled in
+        glEnable(GL_LIGHTING);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        SimWindow::drawWorld();
     }
 
     void timeStepping() override
@@ -104,7 +114,11 @@ int main(int argc, char *argv[])
         nullptr, chassis_joint_prop, chassis_body_prop);
 
     // Set the shape of the body
-    chassis_body->createShapeNodeWith<CollisionAspect, DynamicsAspect, VisualAspect>(chassis_shape);
+    auto chassis_shape_node = chassis_body->createShapeNodeWith<
+        CollisionAspect,
+        DynamicsAspect,
+        VisualAspect>(chassis_shape);
+    chassis_shape_node->getVisualAspect()->setRGB(Vector3d{0.85,0.85,0.85});
 
 
     //
@@ -144,14 +158,19 @@ int main(int argc, char *argv[])
     auto ground_depth = 1.0;
 
     auto ground = Skeleton::create("ground");
-    auto ground_body = ground->createJointAndBodyNodePair<WeldJoint>(nullptr).second;
+    auto ground_body = ground->createJointAndBodyNodePair<WeldJoint>().second;
     ground_body->setRestitutionCoeff(restitution);
     ShapePtr ground_box(new BoxShape(Vector3d(100, ground_depth, 100)));
-    ground_body->createShapeNodeWith<CollisionAspect, DynamicsAspect, VisualAspect>(ground_box);
+    auto ground_shape_node = ground_body->createShapeNodeWith<
+        VisualAspect,
+        CollisionAspect,
+        DynamicsAspect>(ground_box);
+    ground_shape_node->getVisualAspect()->setColor(Eigen::Vector3d(0.85, 0.85, 0.85));
 
     // Shift the ground so that its top is at y=0
     Isometry3d ground_tf(Isometry3d::Identity());
-    ground_tf.translation() = Vector3d(0.0, -ground_depth / 2.0, 0.0);
+    ground_tf.translate(Vector3d(0.0, -ground_depth / 2.0, 0.0));
+    // ground_tf.rotate(AngleAxisd(0.1, Vector3d(0, 0, 1)));
     ground_body->getParentJoint()->setTransformFromParentBodyNode(ground_tf);
 
 
@@ -160,6 +179,13 @@ int main(int argc, char *argv[])
     //
 
     WorldPtr world(new World);
+
+    if (CollisionDetector::getFactory()->canCreate("ode"))
+    {
+        world->getConstraintSolver()->setCollisionDetector(
+            dart::collision::CollisionDetector::getFactory()->create("ode"));
+        cout << "BULLET" << endl;
+    }
 
     world->addSkeleton(ugv);
     world->addSkeleton(ground);
