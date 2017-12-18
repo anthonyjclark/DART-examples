@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
         nullptr, chassis_joint_prop, chassis_body_prop);
 
     // Set the shape of the body
-    chassis_body->createShapeNodeWith<CollisionAspect,DynamicsAspect>(chassis_shape);
+    chassis_body->createShapeNodeWith<CollisionAspect, DynamicsAspect, VisualAspect>(chassis_shape);
 
 
     //
@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
             chassis_body, wheel_joint_prop, wheel_body_prop);
 
     // Set the shape of the body
-    wheel_body->createShapeNodeWith<CollisionAspect,DynamicsAspect>(wheel_shape);
+    wheel_body->createShapeNodeWith<CollisionAspect, DynamicsAspect, VisualAspect>(wheel_shape);
 
 
     // cout << wheel_joint->getAxis() << endl; --> 0 0 1
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     auto ground_body = ground->createJointAndBodyNodePair<WeldJoint>(nullptr).second;
     ground_body->setRestitutionCoeff(restitution);
     ShapePtr ground_box(new BoxShape(Vector3d(100, ground_depth, 100)));
-    ground_body->createShapeNodeWith<CollisionAspect, DynamicsAspect>(ground_box);
+    ground_body->createShapeNodeWith<CollisionAspect, DynamicsAspect, VisualAspect>(ground_box);
 
     // Shift the ground so that its top is at y=0
     Isometry3d ground_tf(Isometry3d::Identity());
