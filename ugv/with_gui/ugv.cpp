@@ -6,6 +6,8 @@ using namespace dart::dynamics;
 using namespace dart::simulation;
 using namespace Eigen;
 
+#include <dart/gui/gui.hpp>
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -21,6 +23,34 @@ constexpr long double operator"" _cm (long double meters) {
 constexpr long double operator"" _kg_per_m3 (long double density) {
     return density;
 }
+
+
+
+
+class UGVWindow : public dart::gui::SimWindow
+{
+public:
+    UGVWindow(WorldPtr world)
+    {
+        setWorld(world);
+    }
+
+    void keyboard(unsigned char key, int x, int y) override
+    {
+        switch(key)
+        {
+            default:
+                SimWindow::keyboard(key, x, y);
+        }
+    }
+
+    void timeStepping() override
+    {
+        // Step the simulation forward
+        SimWindow::timeStepping();
+    }
+};
+
 
 
 int main()
@@ -142,55 +172,68 @@ int main()
 
 
     //
-    // Simulate the world for some amount of time
+    // Use the DART gui interface to control the world
     //
+    UGVWindow window(world);
 
-    constexpr double TIME_STOP = 10;
-    constexpr double TIME_STEP = 0.001;
-    constexpr double VIS_STEP = 1.0 / 30.0;
-    constexpr double VIS_SCALE = 1000;
-    world->setTimeStep(TIME_STEP);
+    cout << "Some info about keyboard commands." << endl;
 
-    // Create the Revisit logger
-    revisit::logger rl(0.0, VIS_STEP, TIME_STOP);
+    // Initialize glut, initialize the window, and begin the glut event loop
+    glutInit(&argc, argv);
+    window.initWindow(640, 480, "UGV");
+    glutMainLoop();
 
-    rl.add_box(chassis_name,
-        chassis_dimensions.x() * VIS_SCALE,
-        chassis_dimensions.y() * VIS_SCALE,
-        chassis_dimensions.z() * VIS_SCALE);
 
-    rl.add_cylinder(wheel_name,
-        wheel_radius * VIS_SCALE,
-        wheel_thickness * VIS_SCALE);
+    // //
+    // // Simulate the world for some amount of time
+    // //
 
-    double next_vis_output_time = VIS_STEP;
-    while (world->getTime() < TIME_STOP + TIME_STEP/2.0) {
-        world->step();
+    // constexpr double TIME_STOP = 10;
+    // constexpr double TIME_STEP = 0.001;
+    // constexpr double VIS_STEP = 1.0 / 30.0;
+    // constexpr double VIS_SCALE = 1000;
+    // world->setTimeStep(TIME_STEP);
 
-        if (world->getTime() > next_vis_output_time) {
+    // // Create the Revisit logger
+    // revisit::logger rl(0.0, VIS_STEP, TIME_STOP);
 
-            auto chassis_T = chassis_body->getTransform();
-            auto ch_t = chassis_T.translation() * VIS_SCALE;
-            Quaterniond ch_q(chassis_T.rotation());
+    // rl.add_box(chassis_name,
+    //     chassis_dimensions.x() * VIS_SCALE,
+    //     chassis_dimensions.y() * VIS_SCALE,
+    //     chassis_dimensions.z() * VIS_SCALE);
 
-            rl.add_frame(chassis_name,
-                ch_t.x(), ch_t.y(), ch_t.z(),
-                ch_q.x(), ch_q.y(), ch_q.z(), ch_q.w());
+    // rl.add_cylinder(wheel_name,
+    //     wheel_radius * VIS_SCALE,
+    //     wheel_thickness * VIS_SCALE);
 
-            auto wheel_T = wheel_body->getTransform();
-            auto wh_t = wheel_T.translation() * VIS_SCALE;
-            Quaterniond wh_q(wheel_T.rotation());
+    // double next_vis_output_time = VIS_STEP;
+    // while (world->getTime() < TIME_STOP + TIME_STEP/2.0) {
+    //     world->step();
 
-            rl.add_to_frame(wheel_name,
-                wh_t.x(), wh_t.y(), wh_t.z(),
-                wh_q.x(), wh_q.y(), wh_q.z(), wh_q.w());
+    //     if (world->getTime() > next_vis_output_time) {
 
-            next_vis_output_time += VIS_STEP;
-        }
+    //         auto chassis_T = chassis_body->getTransform();
+    //         auto ch_t = chassis_T.translation() * VIS_SCALE;
+    //         Quaterniond ch_q(chassis_T.rotation());
 
-    }
+    //         rl.add_frame(chassis_name,
+    //             ch_t.x(), ch_t.y(), ch_t.z(),
+    //             ch_q.x(), ch_q.y(), ch_q.z(), ch_q.w());
 
-    // Passing false prints a compact JSON representation
-    cout << rl.to_string() << endl;
-    return EXIT_SUCCESS;
+    //         auto wheel_T = wheel_body->getTransform();
+    //         auto wh_t = wheel_T.translation() * VIS_SCALE;
+    //         Quaterniond wh_q(wheel_T.rotation());
+
+    //         rl.add_to_frame(wheel_name,
+    //             wh_t.x(), wh_t.y(), wh_t.z(),
+    //             wh_q.x(), wh_q.y(), wh_q.z(), wh_q.w());
+
+    //         next_vis_output_time += VIS_STEP;
+    //     }
+
+    // }
+
+    // // Passing false prints a compact JSON representation
+    // cout << rl.to_string() << endl;
+    // return EXIT_SUCCESS;
 }
