@@ -16,6 +16,6 @@ target_link_libraries(${PROJECT_NAME} ${DART_LIBRARIES})
 # From this directory:
 # $ mkdir build
 # $ cd build
-# $ set -x DART_DIR /Users/ajc/.local/share/dart/cmake and cmake ..
+# $ set -x "DART_DIR" "/Users/ajc/.local/share/dart/cmake"; and cmake ..
 # $ make
 # /Users/ajc/.local/share/dart/cmake/DARTConfig.cmake
