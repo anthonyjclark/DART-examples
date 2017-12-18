@@ -4,7 +4,7 @@ project(tutorialBiped)
 
 find_package(DART 6.2.0 REQUIRED COMPONENTS utils-urdf gui CONFIG)
 
-add_compile_options(-std=c++11)
+add_compile_options(-std=c++14)
 
 include_directories(${DART_INCLUDE_DIRS})
 

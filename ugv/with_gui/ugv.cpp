@@ -1,5 +1,5 @@
 
-#include "../revisit-logger/cpp/logger.hpp"
+#include "../../revisit-logger/cpp/logger.hpp"
 
 #include <dart/dart.hpp>
 using namespace dart::dynamics;
