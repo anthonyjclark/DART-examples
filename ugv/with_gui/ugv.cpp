@@ -53,7 +53,7 @@ public:
 
 
 
-int main()
+int main(int argc, char *argv[])
 {
     // General parameters
     constexpr double material_density = 700.0_kg_per_m3;
