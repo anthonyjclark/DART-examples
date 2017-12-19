@@ -6,6 +6,8 @@ using namespace dart::dynamics;
 using namespace dart::simulation;
 using namespace Eigen;
 
+#include <dart/collision/bullet/bullet.hpp>
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -114,14 +116,15 @@ int main()
     auto ground_depth = 1.0;
 
     auto ground = Skeleton::create("ground");
-    auto ground_body = ground->createJointAndBodyNodePair<WeldJoint>(nullptr).second;
+    auto ground_body = ground->createJointAndBodyNodePair<WeldJoint>().second;
     ground_body->setRestitutionCoeff(restitution);
     ShapePtr ground_box(new BoxShape(Vector3d(100, ground_depth, 100)));
     ground_body->createShapeNodeWith<CollisionAspect, DynamicsAspect>(ground_box);
 
     // Shift the ground so that its top is at y=0
     Isometry3d ground_tf(Isometry3d::Identity());
-    ground_tf.translation() = Vector3d(0.0, -ground_depth / 2.0, 0.0);
+    ground_tf.translate(Vector3d(0.0, -ground_depth / 2.0, 0.0));
+    // ground_tf.rotate(AngleAxisd(0.1, Vector3d(0, 0, 1)));
     ground_body->getParentJoint()->setTransformFromParentBodyNode(ground_tf);
 
 
@@ -130,6 +133,15 @@ int main()
     //
 
     WorldPtr world(new World);
+
+    if (dart::collision::CollisionDetector::getFactory()->canCreate("bullet")) {
+        world->getConstraintSolver()->setCollisionDetector(
+            dart::collision::CollisionDetector::getFactory()->create("bullet"));
+        cout << "BULLET" << endl;
+    } else {
+        cout << "NO BULLET" << endl;
+    }
+
 
     world->addSkeleton(ugv);
     world->addSkeleton(ground);

@@ -3,13 +3,13 @@
 DYLIB_DIR="$HOME/.local/lib"
 
 COMPILER="clang++"
-CPP_FLAGS="-std=c++14 -Wall -Wextra"
+CPP_FLAGS="-std=c++14 -Wall -Wextra -DHAVE_BULLET"
 BIN_DIR="bin"
 
 # Using isystem to suppress DART warnings
-INC_DIRS="-I/usr/local/include/eigen3 -isystem$HOME/.local/include"
+INC_DIRS="-I/usr/local/include/eigen3 -isystem$HOME/.local/include -I/usr/local/include/bullet"
 LIB_DIRS="-L$DYLIB_DIR"
-LIBS="-ldart -lassimp"
+LIBS="-ldart -lassimp -lBulletCollision -lLinearMath"
 
 export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$DYLIB_DIR
 
