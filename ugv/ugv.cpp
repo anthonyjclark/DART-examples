@@ -18,15 +18,14 @@ using std::vector;
 
 
 // ----------------------------------------------------------------------------
-// Properties used to create a wheel
-struct WheelProperties
+// Properties used to create an object
+struct ObjectProperties
 {
-    Vector3d dimensions;    // Ellipsoid dimentions
+    Vector3d dimensions;    // XYZ dimentions
+    Vector3d offset;        // XYZ offset position
     double restitution;     // Material bounciness
     double density;         // Material density
-    double abs_x_offset;    // Absolute value of x offset
-    double abs_z_offset;    // Absolute value of z offset
-    BodyNode* parent;       // Parent node (should be the chassis)
+    BodyNode* parent;       // Parent body node
     string name;
 };
 
@@ -53,26 +52,25 @@ constexpr long double operator"" _kg_per_m3 (unsigned long long density) {
 
 // ----------------------------------------------------------------------------
 // Create the UGV's chassis
-void add_chassis(SkeletonPtr skel, const string & name, const Vector3d & dims,
-    double density, double restitution)
+void add_chassis(SkeletonPtr skel, ObjectProperties & cp)
 {
-    ShapePtr shape{new BoxShape(dims)};
-    const double mass = density * shape->getVolume();
+    ShapePtr shape{new BoxShape(cp.dimensions)};
+    const double mass = cp.density * shape->getVolume();
 
     // Setup the joint properties
     FreeJoint::Properties joint_prop;
-    joint_prop.mName = name + "_joint";
+    joint_prop.mName = cp.name + "_joint";
 
     // Setup the body properties
     BodyNode::Properties body_prop;
-    body_prop.mName = name;
-    body_prop.mRestitutionCoeff = restitution;
+    body_prop.mName = cp.name;
+    body_prop.mRestitutionCoeff = cp.restitution;
     body_prop.mInertia.setMass(mass);
     body_prop.mInertia.setMoment(shape->computeInertia(mass));
 
     // Create the joint-node pair
     auto body_joint_pair = skel->createJointAndBodyNodePair<FreeJoint>(
-        nullptr, joint_prop, body_prop);
+        cp.parent, joint_prop, body_prop);
 
     // Set the shape of the body
     body_joint_pair.second->createShapeNodeWith<CollisionAspect, DynamicsAspect>(shape);
@@ -81,7 +79,7 @@ void add_chassis(SkeletonPtr skel, const string & name, const Vector3d & dims,
 
 // ----------------------------------------------------------------------------
 // Create a UGV wheel
-void add_wheel(SkeletonPtr skel, const WheelProperties & wp)
+void add_wheel(SkeletonPtr skel, const ObjectProperties & wp)
 {
     ShapePtr shape{new EllipsoidShape(wp.dimensions)};
     const double mass = wp.density * shape->getVolume();
@@ -90,12 +88,8 @@ void add_wheel(SkeletonPtr skel, const WheelProperties & wp)
     RevoluteJoint::Properties joint_prop;
     joint_prop.mName = wp.name + "_joint";
 
-    // Position the wheel depending on its name
-    auto x_offset = wp.abs_x_offset * (wp.name.find("front") != string::npos ? 1 : -1);
-    auto z_offset = wp.abs_z_offset * (wp.name.find("right") != string::npos ? 1 : -1);
-
     Isometry3d tf(Isometry3d::Identity());
-    tf.translation() = Vector3d(x_offset, 0, z_offset);
+    tf.translation() = wp.offset;
     joint_prop.mT_ParentBodyToJoint = tf;
 
     // Setup the body properties
@@ -106,8 +100,8 @@ void add_wheel(SkeletonPtr skel, const WheelProperties & wp)
     body_prop.mInertia.setMoment(shape->computeInertia(mass));
 
     // Create the joint-node pair
-    auto body_joint_pair =
-        skel->createJointAndBodyNodePair<RevoluteJoint>(wp.parent, joint_prop, body_prop);
+    auto body_joint_pair = skel->createJointAndBodyNodePair<RevoluteJoint>(
+        wp.parent, joint_prop, body_prop);
 
     // Set the shape of the body
     body_joint_pair.second->createShapeNodeWith<CollisionAspect, DynamicsAspect>(shape);
@@ -162,8 +156,6 @@ int main()
     constexpr double wheel_thickness = 1.5_cm;
     const Vector3d wheel_dimensions{wheel_radius * 2, wheel_radius * 2, wheel_thickness};
 
-    // Weg parameters
-    constexpr double weg_radius = 0.25_cm;
 
     //
     // Create the UGV skeleton
@@ -176,27 +168,29 @@ int main()
     // Create the chassis as part of the UGV and attach it to the world
     //
 
-    FreeJoint* chassis_joint;
-    BodyNode* chassis_body;
-    std::tie(chassis_joint, chassis_body) = add_chassis(
-        ugv, chassis_name, chassis_dimensions, material_density, material_restitution);
+    ObjectProperties chassis_props{
+        chassis_dimensions,
+        Vector3d(0, 0, 0),
+        material_restitution,
+        material_density,
+        nullptr,
+        chassis_name
+    };
+    add_chassis(ugv, chassis_props);
 
 
     //
     // Create the wheels and attach them to the chassis
     //
 
-    // A general wheel properties object (only the name needs to be changed)
-    WheelProperties wheel_props{
+    // A general wheel properties object (only the name and offset will need to be changed)
+    ObjectProperties wp{
         wheel_dimensions,
+        Vector3d(-1, 0, -1),
         material_restitution,
         material_density,
-        chassis_dimensions.x() / 2.0,
-        chassis_dimensions.z() / 2.0,
-        chassis_body,
-        "",
-        weg_radius,
-        1
+        ugv->getBodyNode(chassis_name),
+        ""
     };
 
     vector<string> wheel_names{
@@ -207,8 +201,12 @@ int main()
     vector<long> wheel_idxs;
 
     for (const auto & name : wheel_names) {
-        wheel_props.name = name;
-        add_wheel(ugv, wheel_props);
+
+        wp.name = name;
+        wp.offset.x() = wheel_base  / 2.0 * (name.find("back") == string::npos ? 1 : -1);
+        wp.offset.z() = track_width / 2.0 * (name.find("left") == string::npos ? 1 : -1);
+
+        add_wheel(ugv, wp);
         wheel_idxs.push_back(ugv->getDof(name + "_joint")->getIndexInSkeleton());
     }
 
@@ -254,7 +252,7 @@ int main()
     // Position the UGV above ground
     Vector6d ugv_positions(Vector6d::Zero());
     ugv_positions[4] = vertical_offset;
-    chassis_joint->setPositions(ugv_positions);
+    ugv->getJoint(chassis_name + "_joint")->setPositions(ugv_positions);
 
 
     //
