@@ -4,10 +4,11 @@ DYLIB_DIR="$HOME/.local/lib"
 
 COMPILER="clang++"
 CPP_FLAGS="-std=c++14 -Wall -Wextra"
+LD_FLAGS="-Wl,-search_paths_first -Wl,-headerpad_max_install_names -Wl,-rpath,/Users/ajc/.local/lib"
+
 BIN_DIR="bin"
 
-# Using isystem to suppress DART warnings
-INC_DIRS="-I/usr/local/include/eigen3 -isystem$HOME/.local/include -I/usr/local/include/bullet"
+INC_DIRS="-isystem/usr/local/include/eigen3 -isystem$HOME/.local/include -isystem/usr/local/include/bullet"
 LIB_DIRS="-L$DYLIB_DIR"
 LIBS="-ldart -lassimp -lBulletCollision -lLinearMath -ldart-collision-bullet"
 
@@ -19,7 +20,7 @@ function erun () {
 }
 
 function compile () {
-    erun $COMPILER $CPP_FLAGS $INC_DIRS $LIB_DIRS $LIBS $1/$1.cpp -o $BIN_DIR/$1
+    erun $COMPILER $CPP_FLAGS $LD_FLAGS $INC_DIRS $LIB_DIRS $LIBS $1/$1.cpp -o $BIN_DIR/$1
 }
 
 function build () {

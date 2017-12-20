@@ -134,7 +134,7 @@ int main()
 
     // The logger uses a vertical y-axis (and cannot be changed, for now)
     revisit::logger rl(0.0, VIS_STEP, TIME_STOP);
-    rl.add_group(name, "sphere", radius * 2 * VIS_SCALE);
+    rl.add_sphere(name, radius * VIS_SCALE);
     rl.add_frame(name, 0, starting_height * VIS_SCALE, 0, 0, 0, 0, 1);
 
     double next_vis_output_time = VIS_STEP;
